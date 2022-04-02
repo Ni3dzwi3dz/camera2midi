@@ -1,4 +1,5 @@
 import cv2 as cv
+import os
 
 class ScreenCapture:
 
@@ -10,44 +11,45 @@ class ScreenCapture:
         self.faces=[]
         self.palms=[]
 
-        self.faceCascade = faceCascade = cv.CascadeClassifier(faceXml)
-        self.palmCascade = palmCascade = cv.CascadeClassifier(palmXml)
+        self.faceCascade = faceCascade = cv.CascadeClassifier(faceXML)
+        self.palmCascade = palmCascade = cv.CascadeClassifier(palmXML)
+
+        self.video_capture = cv.VideoCapture(0)
 
 
-    def run(self):
+    def run(self) -> None:
 
-palmXml =
+        while True:
+            ret, frame = self.video_capture.read()
+            gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
 
+            self.faces = self.faceCascade.detectMultiScale(
+                gray,
+                scaleFactor=1.1,
+                minNeighbors=self.neighbors,
+                minSize=(self.size, self.size)
+            )
 
-video_capture = cv.VideoCapture(0)
+            for (x, y, w, h) in self.faces:
+                cv.rectangle(frame, (x, y,), (x+w, y+h), (0, 255, 0), 2)
 
-while True:
-    ret, frame = video_capture.read()
+            self.palms = self.palmCascade.detectMultiScale(
+                gray,
+                scaleFactor=1.1,
+                minNeighbors=self.neighbors,
+                minSize=(int(self.size/10), int(self.size/10))
+            )
 
-    gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+            for (x, y, w, h) in self.palms:
+                cv.rectangle(frame, (x, y,), (x+w, y+h), (0, 0, 255), 2)
+            cv.imshow("Video", frame)
 
-    faces = faceCascade.detectMultiScale(
-        gray,
-        scaleFactor=1.1,
-        minNeighbors=5,
-        minSize=(50, 50)
-    )
-    for (x, y, w, h) in faces:
-        cv.rectangle(frame, (x, y,), (x+w, y+h), (0, 255, 0), 2)
+            if cv.waitKey(1) & 0xFF == ord('q'):
+                break
 
-    palms = palmCascade.detectMultiScale(
-        gray,
-        scaleFactor=1.1,
-        minNeighbors=5,
-        minSize=(5, 5)
-    )
+        video_capture.release()
+        cv.destroyAllWindows()
 
-    for (x, y, w, h) in palms:
-        cv.rectangle(frame, (x, y,), (x+w, y+h), (0, 0, 255), 2)
-    cv.imshow("Video", frame)
-
-    if cv.waitKey(1) & 0xFF == ord('q'):
-        break
-
-video_capture.release()
-cv.destroyAllWindows()
+if __name__ == '__main__':
+    capture = ScreenCapture(5,50)
+    capture.run()
